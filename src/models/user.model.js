@@ -50,7 +50,7 @@ const userSchema = new Schema(
         },
     },
         {
-           timestamp:true,
+           timestamps:true,
         }
 );
 //hashing password before saving user
