@@ -62,7 +62,7 @@ userSchema.pre("save",async  function (next) {
     next();
 });
 //password comparison method
-userSchema.methods.isPasswordCoreect = async function(password){
+userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password , this.password);
 }
 //access token generation method

@@ -1,0 +1,24 @@
+import { asyncHandler } from '../utils/asyncHandler.js';
+import jwt from 'jsonwebtoken';
+import { apiError } from '../utils/apiError.js';
+import { User } from '../models/User.model.js';
+
+export const verifyJWT= asyncHandler(async (req, res, next) => {
+    try {
+        const Token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        if (!Token) {
+            throw new apiError(401, "Access denied. No token provided.");
+        }
+    
+       const decodedToken = jwt.verify(Token, process.env.ACCESS_TOKEN_SECRET);
+       const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+       if (!user) {
+           throw new apiError(401, "Invalid token. User not found.");
+       }
+       req.user = user;
+       next();
+    } catch (error) {
+        throw new apiError(401, "Invalid or expired token.");
+        
+    }
+});
