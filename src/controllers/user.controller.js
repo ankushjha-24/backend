@@ -311,6 +311,56 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200,channel[0],"channel fetched successfully"));
 });
+//get watch history
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(req.user?._id)
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistoryDetails",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"ownerDetails",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$ownerDetails"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+    if(!user?.length){
+        throw new apiError(404,"user not found");
+    };
+    return res
+    .status(200)
+    .json(new apiResponse(200,user[0].watchHistoryDetails,"watch history fetched successfully"));
+});
 export {
     registerUser,
     loginUser,
@@ -321,5 +371,6 @@ export {
     updateAccountDetails,
     updateAvatar,
     updatecoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
